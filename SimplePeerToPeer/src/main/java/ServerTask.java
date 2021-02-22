@@ -17,6 +17,7 @@ public class ServerTask extends Thread {
 	private Peer peer = null; // so we have access to the peer that belongs to that thread
 	private PrintWriter out = null;
 	private Socket socket = null;
+
 	
 	// Init with socket that is opened and the peer
 	public ServerTask(Socket socket, Peer peer) throws IOException {
@@ -25,6 +26,7 @@ public class ServerTask extends Thread {
 		this.peer = peer;
 		this.socket = socket;
 	}
+
 	
 	// basically wait for an input, right now we can only handle a join request
 	// and a message
@@ -58,9 +60,47 @@ public class ServerTask extends Thread {
 				{
 					System.out.println("[" + json.getString("username")+"]: " + json.getString("message"));
 					// Task 4 send joke to all
-					peer.addJoke(json.getString("message"));
+						if (peer.isLeader())
+						{
+							peer.addJoke(json.getString("message"));
+						}
+					//peer.addJoke(json.getString("message"));
 					//break;
 				}
+
+				// 2.4 update votes and tally
+				
+				if(json.getString("type").equals("vote"))
+				{
+					int tally = peer.getTally();
+					int peers = peer.getNumPeers();
+					// needs try
+					System.out.println("[" + json.getString("username")+"]: " + json.getString("message"));
+					// update tally
+					if (json.getString("message").equals("ok"))
+					{
+						peer.addTally();
+					}
+					else{
+						peer.subtractTally();
+					}
+					System.out.println(peer.getTally());
+
+					if(peers == tally)
+					{
+						// if true, add joke to everyone's list
+						if (peer.checkResult())
+						{
+							System.out.println("Success! The joke was added");
+							peer.addFinalJoke();
+							peer.clearPotentialJokes();
+						} else {
+							System.out.println("Unsuccessful.  The joke was not added");
+							peer.clearPotentialJokes();
+						}
+					}
+				}
+			
 
 				//String input = bufferedReader.readLine();
 				//System.out.println(input);

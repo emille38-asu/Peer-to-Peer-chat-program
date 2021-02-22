@@ -23,12 +23,16 @@ public class Peer {
 	private String username;
 	private BufferedReader bufferedReader;
 	private ServerThread serverThread;
-	//task 4 list of potential jokes
+	//task 4 list of potential jokes and final jokes.  limit one joke in potentialJokes
 	public static ArrayList<String> potentialJokes = new ArrayList<String>();
+	public static ArrayList<String> finalJokes = new ArrayList<String>();
 
 	private Set<SocketInfo> peers = new HashSet<SocketInfo>();
 	private boolean leader = false;
 	private SocketInfo leaderSocket;
+
+	public int voteTally = 0;
+	public boolean winner = false;
 
 	
 	public Peer(BufferedReader bufReader, String username,ServerThread serverThread){
@@ -42,15 +46,74 @@ public class Peer {
 		this.leaderSocket = leaderSocket;
 	}
 
+	// task 2.4 determine the winner of the consensus
+	public boolean checkResult(){
+		if(getTally() >= (getNumPeers() / 2))
+		{
+			return true;
+		} else {
+			return false;
+		}
+	}
+	
+		// some helper methods
+	// reset tally after election/joke consensus
+	public void resetTally()
+	{
+		voteTally = 0;
+	}
+
+	public void addTally()
+	{
+		++voteTally;
+	}
+
+	public void subtractTally()
+	{
+		--voteTally;
+	}
+
+	public int getTally(){
+		return voteTally;
+	}
+
+	// Task 2.4 get number of peers for consensus
+	public int getNumPeers(){
+		return peers.size();
+	}
+
+	// some helper methods
+	// reset winner after election/joke consensus
+	public void resetWinner()
+	{
+		winner = false;
+	}
+
 	// task 4 add jokes to each peer
 	public void addJoke(String joke)
 	{
+		// try 
 		potentialJokes.add(joke);
 	}
 
+	// check if current node is the leader
 	public boolean isLeader(){
 		return leader;
 	}
+
+	// add vote to final list if winner
+	public void addFinalJoke(){
+		// try
+		finalJokes.add(potentialJokes.get(0));
+	}
+
+	// clear list of potential jokes after vote
+	public void clearPotentialJokes(){
+		// try
+		potentialJokes.remove(0);
+	}
+
+
 
 	public void addPeer(SocketInfo si){
 		if (peers.contains(si))
@@ -99,19 +162,22 @@ public class Peer {
 	public void askForInput() throws Exception {
 		try {
 			
-			System.out.println("> You can now start chatting (exit to exit, joke to send a joke, send to send joke to all if leader)");
+			System.out.println("> You can now start chatting (exit to exit, joke to send a joke, vote to vote on first joke in list, send to send joke to all if leader)");
 			while(true) {
 				String message = bufferedReader.readLine();
 
 
-				// start task 2.4 here
-				if (message.equals("joke")){
+				// start task 2.4 enter joke if there is a the list is empty
+				if (message.equals("joke") && potentialJokes.isEmpty()){
 					System.out.println("Please enter your joke");
 					String joke = bufferedReader.readLine();
-					addJoke(joke);
+					//addJoke(joke);
 					// send to leader node
 					commLeader("{'type': 'joke', 'username': '"+ username +"','message':'" + joke + "'}");
+				} else if (message.equals("joke") && potentialJokes.isEmpty() == false) {
+					System.out.println("There is already a joke in the list.  Please vote on it.");
 				}
+				
 					// task 2.4 send joke to all.  Only send node is the leader
 				if (message.equals("send") && isLeader()){
 					try {
@@ -121,6 +187,22 @@ public class Peer {
 						pushMessage("{'type': 'message', 'username': '"+ username +"','message':'" + joke + "'}");
 					} catch (Exception e) {
 						System.out.println("Cannot send joke due to: " + e);
+					}
+				}
+
+				// task 2.4 send vote to leader if there is a joke in the list
+				if (message.equals("vote") && potentialJokes.isEmpty() ==  false){
+					try {
+						System.out.println("enter ok to agree, no to disagree");
+						String answer = bufferedReader.readLine();
+						if (answer.contains("ok") || answer.contains("no"))
+						{
+							commLeader("{'type': 'vote', 'username': '"+ username +"','message':'" + answer + "'}");
+						} else {
+							System.out.println("Invalid response");
+						}
+					} catch (Exception e) {
+						System.out.println("Invalid response: " + e);
 					}
 				}
 
@@ -194,6 +276,12 @@ public class Peer {
                 		System.out.println(it.next()); 
         			}
 					//System.out.println(jokes);
+				}
+
+				//task 2.4
+				if (message.contains("vote"))
+				{
+					JSONObject json = new JSONObject(message);
 				}
 
 				
