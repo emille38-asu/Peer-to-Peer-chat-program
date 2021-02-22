@@ -3,6 +3,8 @@ import java.io.InputStreamReader;
 import java.net.Socket;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.ArrayList;
+import java.util.Iterator;
 
 import java.io.PrintWriter;
 import org.json.*;
@@ -21,6 +23,8 @@ public class Peer {
 	private String username;
 	private BufferedReader bufferedReader;
 	private ServerThread serverThread;
+	//task 4 list of potential jokes
+	public static ArrayList<String> potentialJokes = new ArrayList<String>();
 
 	private Set<SocketInfo> peers = new HashSet<SocketInfo>();
 	private boolean leader = false;
@@ -36,6 +40,12 @@ public class Peer {
 	public void setLeader(boolean leader, SocketInfo leaderSocket){
 		this.leader = leader;
 		this.leaderSocket = leaderSocket;
+	}
+
+	// task 4 add jokes to each peer
+	public void addJoke(String joke)
+	{
+		potentialJokes.add(joke);
 	}
 
 	public boolean isLeader(){
@@ -89,24 +99,30 @@ public class Peer {
 	public void askForInput() throws Exception {
 		try {
 			
-			System.out.println("> You can now start chatting (exit to exit, joke to send a joke)");
+			System.out.println("> You can now start chatting (exit to exit, joke to send a joke, send to send joke to all if leader)");
 			while(true) {
 				String message = bufferedReader.readLine();
 
 
-				// start task 4 here
+				// start task 2.4 here
 				if (message.equals("joke")){
 					System.out.println("Please enter your joke");
 					String joke = bufferedReader.readLine();
+					addJoke(joke);
 					// send to leader node
 					commLeader("{'type': 'joke', 'username': '"+ username +"','message':'" + joke + "'}");
 				}
-
-
-
-
-
-
+					// task 2.4 send joke to all.  Only send node is the leader
+				if (message.equals("send") && isLeader()){
+					try {
+						System.out.println("Sending joke to all");
+						System.out.println(potentialJokes);
+						String joke = potentialJokes.get(0);
+						pushMessage("{'type': 'message', 'username': '"+ username +"','message':'" + joke + "'}");
+					} catch (Exception e) {
+						System.out.println("Cannot send joke due to: " + e);
+					}
+				}
 
 				if (message.equals("exit")) {
 					//task 2.2
@@ -162,6 +178,25 @@ public class Peer {
 				String list = json.getString("list");
 				updateListenToPeers(list); // when we get a list of all other peers that the leader knows we update them
 				}
+				//task 2.4
+				if (message.contains("joke"))
+				{
+					JSONObject json = new JSONObject(message);
+					potentialJokes.add(json.getString("message"));
+					// may not need to print
+
+					//Task 2.4 thread safe
+					synchronized(potentialJokes) 
+       				 { 
+           				Iterator it = potentialJokes.iterator(); 
+  
+            			while (it.hasNext()) 
+                		System.out.println(it.next()); 
+        			}
+					//System.out.println(jokes);
+				}
+
+				
 
 		} catch(Exception e) {
 			e.printStackTrace();

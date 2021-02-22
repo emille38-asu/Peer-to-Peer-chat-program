@@ -35,6 +35,7 @@ public class ServerTask extends Thread {
 	public void run() {
 		while (true) {
 			try {
+				System.out.println("The loop is here");
 			    JSONObject json = new JSONObject(bufferedReader.readLine());
 
 			    if (json.getString("type").equals("join")){
@@ -56,7 +57,9 @@ public class ServerTask extends Thread {
 				if(json.getString("type").equals("joke"))
 				{
 					System.out.println("[" + json.getString("username")+"]: " + json.getString("message"));
-					peer.pushMessage("Recieved joke");
+					// Task 4 send joke to all
+					peer.addJoke(json.getString("message"));
+					//break;
 				}
 
 				//String input = bufferedReader.readLine();
