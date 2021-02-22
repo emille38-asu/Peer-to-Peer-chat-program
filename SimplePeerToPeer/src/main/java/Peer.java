@@ -43,7 +43,15 @@ public class Peer {
 	}
 
 	public void addPeer(SocketInfo si){
-		peers.add(si);
+		if (peers.contains(si))
+		{
+			// duplicate peer info will not be added
+			System.out.println("Peer already added");
+		}
+		else 
+		{
+			peers.add(si);
+		}
 	}
 	
 	// get a string of all peers that this peer knows
@@ -81,9 +89,25 @@ public class Peer {
 	public void askForInput() throws Exception {
 		try {
 			
-			System.out.println("> You can now start chatting (exit to exit)");
+			System.out.println("> You can now start chatting (exit to exit, joke to send a joke)");
 			while(true) {
 				String message = bufferedReader.readLine();
+
+
+				// start task 4 here
+				if (message.equals("joke")){
+					System.out.println("Please enter your joke");
+					String joke = bufferedReader.readLine();
+					// send to leader node
+					commLeader("{'type': 'joke', 'username': '"+ username +"','message':'" + joke + "'}");
+				}
+
+
+
+
+
+
+
 				if (message.equals("exit")) {
 					//task 2.2
 					pushMessage("{'type': 'message', 'username': '"+ username +"','message':'" + " has left the chat" + "'}");
@@ -112,6 +136,7 @@ public class Peer {
 	 */
 	public void commLeader(String message) {
 		try {
+			//System.out.println("This is from commLeader: " + message);
 			BufferedReader reader = null; 
 				Socket socket = null;
 				try {
@@ -130,15 +155,20 @@ public class Peer {
 				PrintWriter out = new PrintWriter(socket.getOutputStream(), true);
 				out.println(message);
 
+				if (message.contains("join"))
+				{
 				JSONObject json = new JSONObject(reader.readLine());
 				System.out.println("     Received from server " + json);
 				String list = json.getString("list");
 				updateListenToPeers(list); // when we get a list of all other peers that the leader knows we update them
+				}
 
 		} catch(Exception e) {
 			e.printStackTrace();
 		}
 	}
+
+	
 
 /**
 	 * Send a message to every peer in the peers list, if a peer cannot be reached remove it from list

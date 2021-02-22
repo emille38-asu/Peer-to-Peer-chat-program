@@ -52,6 +52,15 @@ public class ServerTask extends Thread {
 			    } else {
 			    	System.out.println("[" + json.getString("username")+"]: " + json.getString("message"));
 			    }
+
+				if(json.getString("type").equals("joke"))
+				{
+					System.out.println("[" + json.getString("username")+"]: " + json.getString("message"));
+					peer.pushMessage("Recieved joke");
+				}
+
+				//String input = bufferedReader.readLine();
+				//System.out.println(input);
 			    
 			    
 			} catch (Exception e) {
