@@ -1,8 +1,8 @@
 SocketInfo.java
  SocketInfo
-Peer.java
- Peer
 ServerTask.java
  ServerTask
 ServerThread.java
  ServerThread
+Peer.java
+ Peer

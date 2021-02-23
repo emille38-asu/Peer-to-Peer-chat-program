@@ -1,3 +1,9 @@
+/**
+  File: ServerTask.java
+  @author Edward Miller
+  Description: Client class in package taskone.
+*/
+
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -12,7 +18,8 @@ import org.json.*;
  * 
  */
 
-public class ServerTask extends Thread {
+public class ServerTask extends Thread 
+{
 	private BufferedReader bufferedReader;
 	private Peer peer = null; // so we have access to the peer that belongs to that thread
 	private PrintWriter out = null;
@@ -20,7 +27,8 @@ public class ServerTask extends Thread {
 
 	
 	// Init with socket that is opened and the peer
-	public ServerTask(Socket socket, Peer peer) throws IOException {
+	public ServerTask(Socket socket, Peer peer) throws IOException 
+	{
 		bufferedReader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
 		out = new PrintWriter(socket.getOutputStream(), true);
 		this.peer = peer;
@@ -34,10 +42,12 @@ public class ServerTask extends Thread {
 	// You can enhance this or totally change it, up to you. 
 	// I used simple JSON here, you can use your own protocol, use protobuf, anything you want
 	// in here this is not done especially pretty, I just use a PrintWriter and BufferedReader for simplicity
-	public void run() {
-		while (true) {
-			try {
-				System.out.println("The loop is here");
+	public void run() 
+	{
+		while (true) 
+		{
+			try 
+			{
 			    JSONObject json = new JSONObject(bufferedReader.readLine());
 
 			    if (json.getString("type").equals("join")){
@@ -64,17 +74,13 @@ public class ServerTask extends Thread {
 						{
 							peer.addJoke(json.getString("message"));
 						}
-					//peer.addJoke(json.getString("message"));
-					//break;
 				}
 
 				// 2.4 update votes and tally
-				
 				if(json.getString("type").equals("vote"))
 				{
 					int tally = peer.getTally();
 					int peers = peer.getNumPeers();
-					// needs try
 					System.out.println("[" + json.getString("username")+"]: " + json.getString("message"));
 					// update tally
 					if (json.getString("message").equals("ok"))
@@ -100,12 +106,6 @@ public class ServerTask extends Thread {
 						}
 					}
 				}
-			
-
-				//String input = bufferedReader.readLine();
-				//System.out.println(input);
-			    
-			    
 			} catch (Exception e) {
 				interrupt();
 				break;

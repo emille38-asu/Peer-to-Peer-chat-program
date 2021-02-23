@@ -1,11 +1,16 @@
+/**
+  File: Peer.java
+  @author Edward Miller
+  Description: Runs peer nodes in chat
+*/
+
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.net.Socket;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.ArrayList;
-import java.util.Iterator;
-
+import java.util.Iterator; 
 import java.io.PrintWriter;
 import org.json.*;
 
@@ -19,35 +24,52 @@ import org.json.*;
  * 
  */
 
-public class Peer {
+public class Peer 
+{
 	private String username;
 	private BufferedReader bufferedReader;
 	private ServerThread serverThread;
 	//task 4 list of potential jokes and final jokes.  limit one joke in potentialJokes
 	public static ArrayList<String> potentialJokes = new ArrayList<String>();
 	public static ArrayList<String> finalJokes = new ArrayList<String>();
-
+	// task global variable to let pawns know there is a leader
+	public static boolean weHaveALeader = true;
 	private Set<SocketInfo> peers = new HashSet<SocketInfo>();
 	private boolean leader = false;
 	private SocketInfo leaderSocket;
-
 	public int voteTally = 0;
 	public boolean winner = false;
 
 	
-	public Peer(BufferedReader bufReader, String username,ServerThread serverThread){
+	public Peer(BufferedReader bufReader, String username,ServerThread serverThread)
+	{
 		this.username = username;
 		this.bufferedReader = bufReader;
 		this.serverThread = serverThread;
 	}
 
-	public void setLeader(boolean leader, SocketInfo leaderSocket){
+	// task 5(a) used after leader set to true
+	/**
+     * Method: setLeader
+     * Inputs: @param boolean, @param SocketInfo the host and port of the socket and leader status
+     * Returns: none
+     * Description: Sets a new leader
+     */
+	public void setLeader(boolean leader, SocketInfo leaderSocket)
+	{
 		this.leader = leader;
 		this.leaderSocket = leaderSocket;
 	}
 
 	// task 2.4 determine the winner of the consensus
-	public boolean checkResult(){
+	/**
+     * Method: checkResult
+     * Inputs: none
+     * Returns: none
+     * Description: checks result of joke consensus
+     */
+	public boolean checkResult()
+	{
 		if(getTally() >= (getNumPeers() / 2))
 		{
 			return true;
@@ -56,66 +78,140 @@ public class Peer {
 		}
 	}
 	
-		// some helper methods
-	// reset tally after election/joke consensus
+	/**
+     * Method: resetTally
+     * Inputs: none
+     * Returns: none
+     * Description: resets vote tally after consensus
+     */
 	public void resetTally()
 	{
 		voteTally = 0;
 	}
 
+	/**
+     * Method: addTally
+     * Inputs: none
+     * Returns: none
+     * Description: increments tally
+     */
 	public void addTally()
 	{
 		++voteTally;
 	}
 
+	/**
+     * Method: subtractTally
+     * Inputs: none
+     * Returns: none
+     * Description: decrements tally
+     */
 	public void subtractTally()
 	{
 		--voteTally;
 	}
 
-	public int getTally(){
+	/**
+     * Method: pop
+     * Inputs: none
+     * Returns: @param voteTally the tally of votes
+     * Description: Removes the last element of the list
+     */
+	public int getTally()
+	{
 		return voteTally;
 	}
 
 	// Task 2.4 get number of peers for consensus
-	public int getNumPeers(){
+	/**
+     * Method: getNumPeers
+     * Inputs: none
+     * Returns: none
+     * Description: get number of current peers
+     */
+	public int getNumPeers()
+	{
 		return peers.size();
 	}
 
-	// some helper methods
-	// reset winner after election/joke consensus
+	/**
+     * Method: resetWinner
+     * Inputs: none
+     * Returns: none
+     * Description: resets winner
+     */
 	public void resetWinner()
 	{
 		winner = false;
 	}
 
-	// task 4 add jokes to each peer
+	/**
+     * Method: addJoke
+     * Inputs: @param joke a joke entered by the user
+     * Returns: none
+     * Description: add joke to potential list
+     */
 	public void addJoke(String joke)
 	{
-		// try 
 		potentialJokes.add(joke);
 	}
 
-	// check if current node is the leader
-	public boolean isLeader(){
+	/**
+     * Method: isLeader
+     * Inputs: none
+     * Returns: none
+     * Description: checks if node is the leader
+     */
+	public boolean isLeader()
+	{
 		return leader;
 	}
 
-	// add vote to final list if winner
-	public void addFinalJoke(){
-		// try
+	/**
+     * Method: addFinalJoke
+     * Inputs: none
+     * Returns: none
+     * Description: add joke to final list
+     */
+	public void addFinalJoke()
+	{
 		finalJokes.add(potentialJokes.get(0));
 	}
 
-	// clear list of potential jokes after vote
-	public void clearPotentialJokes(){
-		// try
+	/**
+     * Method: clearPotentialJokes
+     * Inputs: none
+     * Returns: none
+     * Description: remove joke
+     */
+	public void clearPotentialJokes()
+	{
 		potentialJokes.remove(0);
 	}
 
+	/**
+     * Method: becomeNewLeader
+     * Inputs: none
+     * Returns: none
+     * Description: sets current node to leader
+     */
+	public synchronized void becomeNewLeader()
+	{
+		leader = true;
+		System.out.println("You have become the new leader!");
+		SocketInfo s = new SocketInfo(serverThread.getHost(), serverThread.getPort());
+		setLeader(true, s);
+		addPeer(s);
+	}
 
-
-	public void addPeer(SocketInfo si){
+	/**
+     * Method: addPeer
+     * Inputs: @param si socket info
+     * Returns: none
+     * Description: adds a new peer
+     */
+	public void addPeer(SocketInfo si)
+	{
 		if (peers.contains(si))
 		{
 			// duplicate peer info will not be added
@@ -127,8 +223,14 @@ public class Peer {
 		}
 	}
 	
-	// get a string of all peers that this peer knows
-	public String getPeers(){
+	/**
+     * Method: getPeers
+     * Inputs: none
+     * Returns: String
+     * Description: gets current peers
+     */
+	public String getPeers()
+	{
 		String s = "";
 		for (SocketInfo p: peers){
 			s = s +  p.getHost() + ":" + p.getPort() + " ";
@@ -159,28 +261,28 @@ public class Peer {
 	/**
 	 * Client waits for user to input can either exit or send a message
 	 */
-	public void askForInput() throws Exception {
-		try {
+	public void askForInput() throws Exception 
+	{
+		try 
+		{
 			
 			System.out.println("> You can now start chatting (exit to exit, joke to send a joke, vote to vote on first joke in list, send to send joke to all if leader)");
 			while(true) {
 				String message = bufferedReader.readLine();
-
-
 				// start task 2.4 enter joke if there is a the list is empty
-				if (message.equals("joke") && potentialJokes.isEmpty()){
+				if (message.equals("joke") && potentialJokes.isEmpty())
+				{
 					System.out.println("Please enter your joke");
 					String joke = bufferedReader.readLine();
-					//addJoke(joke);
-					// send to leader node
 					commLeader("{'type': 'joke', 'username': '"+ username +"','message':'" + joke + "'}");
 				} else if (message.equals("joke") && potentialJokes.isEmpty() == false) {
 					System.out.println("There is already a joke in the list.  Please vote on it.");
 				}
-				
 					// task 2.4 send joke to all.  Only send node is the leader
-				if (message.equals("send") && isLeader()){
-					try {
+				if (message.equals("send") && isLeader())
+				{
+					try 
+					{
 						System.out.println("Sending joke to all");
 						System.out.println(potentialJokes);
 						String joke = potentialJokes.get(0);
@@ -189,7 +291,6 @@ public class Peer {
 						System.out.println("Cannot send joke due to: " + e);
 					}
 				}
-
 				// task 2.4 send vote to leader if there is a joke in the list
 				if (message.equals("vote") && potentialJokes.isEmpty() ==  false){
 					try {
@@ -206,8 +307,10 @@ public class Peer {
 					}
 				}
 
-				if (message.equals("exit")) {
-					//task 2.2
+
+				if (message.equals("exit")) 
+				{
+					//task 2.2 lets all nodes know someone has left the chat
 					pushMessage("{'type': 'message', 'username': '"+ username +"','message':'" + " has left the chat" + "'}");
 					System.out.println("bye, see you next time");
 					break;
@@ -222,17 +325,14 @@ public class Peer {
 		}
 	}
 
-// ####### You can consider moving the two methods below into a separate class to handle communication
-	// if you like (they would need to be adapted some of course)
-
-
 	/**
 	 * Send a message only to the leader 
 	 *
 	 * @param message String that peer wants to send to the leader node
 	 * this might be an interesting point to check if one cannot connect that a leader election is needed
 	 */
-	public void commLeader(String message) {
+	public void commLeader(String message) 
+	{
 		try {
 			//System.out.println("This is from commLeader: " + message);
 			BufferedReader reader = null; 
@@ -246,6 +346,8 @@ public class Peer {
 						socket.close();
 					} else {
 						System.out.println("Could not connect to " + leaderSocket.getHost() + ":" + leaderSocket.getPort());
+						// task 5 if leader does not respond, become new leader
+						becomeNewLeader();
 					}
 					return; // returning since we cannot connect or something goes wrong the rest will not work. 
 				}
@@ -265,7 +367,6 @@ public class Peer {
 				{
 					JSONObject json = new JSONObject(message);
 					potentialJokes.add(json.getString("message"));
-					// may not need to print
 
 					//Task 2.4 thread safe
 					synchronized(potentialJokes) 
@@ -275,7 +376,6 @@ public class Peer {
             			while (it.hasNext()) 
                 		System.out.println(it.next()); 
         			}
-					//System.out.println(jokes);
 				}
 
 				//task 2.4
@@ -283,8 +383,6 @@ public class Peer {
 				{
 					JSONObject json = new JSONObject(message);
 				}
-
-				
 
 		} catch(Exception e) {
 			e.printStackTrace();
@@ -298,7 +396,8 @@ public class Peer {
 	 *
 	 * @param message String that peer wants to send to other peers
 	 */
-	public void pushMessage(String message) {
+	public void pushMessage(String message) 
+	{
 		try {
 			System.out.println("     Trying to send to peers: " + peers.size());
 
@@ -344,7 +443,8 @@ public class Peer {
 	 * @param args[0] username
 	 * @param args[1] port for server
 	 */
-	public static void main (String[] args) throws Exception {
+	public static void main (String[] args) throws Exception 
+	{
 
 		BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(System.in));
 		String username = args[0];

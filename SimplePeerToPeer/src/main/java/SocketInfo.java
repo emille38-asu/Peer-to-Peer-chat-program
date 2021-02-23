@@ -10,20 +10,24 @@ import java.util.Set;
  * 
  */
 
-public class SocketInfo {
+public class SocketInfo 
+{
 	private String host;
 	private int port;
 
-	public SocketInfo (String host, int port){
+	public SocketInfo (String host, int port)
+	{
 		this.host = host;
 		this.port = port;
 	}
 
-	public int getPort(){
+	public int getPort()
+	{
 		return port;
 	}
 
-	public String getHost(){
+	public String getHost()
+	{
 		return host;
 	}
 

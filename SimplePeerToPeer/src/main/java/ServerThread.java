@@ -18,7 +18,8 @@ public class ServerThread extends Thread{
 	private SocketInfo socket; // socket info of our own socket (host,port)
 	private Peer peer = null; // throwing in the peer so we can call methods on it
 	
-	public ServerThread(String peer) throws IOException {
+	public ServerThread(String peer) throws IOException 
+	{
 		// peer has host and port, take it appart and save it SocketInfo
 		String[] hostPort = peer.split(":");
 		int port = Integer.valueOf(hostPort[1]);
@@ -33,27 +34,33 @@ public class ServerThread extends Thread{
 		System.out.println("     Listening on: " + host + ":" + port);
 	}
 	
-	public void setPeer(Peer peer){
+	public void setPeer(Peer peer)
+	{
 		this.peer = peer;
 	}
 
-	public String getHost(){
+	public String getHost()
+	{
 		return socket.getHost();
 	}
 
-	public int getPort(){
+	public int getPort()
+	{
 		return socket.getPort();
 	}
 	/**
 	 * Starting the thread, we are waiting for clients wanting to talk to us, then create a thread for that client to interact
 	 */
-	public void run() {
+	public void run() 
+	{
 		try {
-			while (true) {
+			while (true) 
+			{
 				Socket sock = serverSocket.accept();
 				new ServerTask(sock, peer).start();
 			}
-		} catch (Exception e) {
+		} catch (Exception e) 
+		{
 			e.printStackTrace();
 		}
 	}
